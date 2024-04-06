@@ -130,7 +130,7 @@ async function handlePlanet(nextPlanet, useEdenReturnLogic = true)
                 }
             }
         }
-    drawState(nextShipLayout)
+            drawState(ship.prevShipLayout)
     
     for (const key in garbage)
     {
