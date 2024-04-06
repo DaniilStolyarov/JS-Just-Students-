@@ -4,7 +4,7 @@ const {TOKEN, ORIGIN} = (await import("./config.json", {
   },
 })).default;
 const sleep = ms => new Promise(r => setTimeout(r, ms));
-const latency = 170
+const latency = 50
 export class Ship
 {
   constructor()
@@ -78,7 +78,8 @@ export class Ship
     this.planet = universe.ship.planet.name
     this.garbage = universe.ship.garbage
     console.log("currentPlanet", this.planet)
-    this.loadGraph(universe.universe)
+    
+    if (!this.graph) this.loadGraph(universe.universe)
     await sleep(latency);
   }
   async getUniverse()

@@ -2,14 +2,15 @@ import { Ship } from "./api.mjs";
 import { drawState } from "./drawState.mjs";
 import { genEmpty, razn } from "./mat.mjs";
 import { print } from "./mat.mjs";
-const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+while (true)
+{
+    const sleep = ms => new Promise(r => setTimeout(r, ms));
 // start and load universe data
 let ship = new Ship();
 ship.logPaths = []
 await ship.fetchUniverse();
-
-// console.log(await ship.deleteReset())
-// await sleep(100000000)
+const visited = new Set();
 
 const paths = ship.makeGraph(ship.planet, "Eden")
 paths.sort((a, b) =>
@@ -19,7 +20,6 @@ paths.sort((a, b) =>
 const fromEarthToEden = paths[0]
 console.log(fromEarthToEden.path.join(" -> "))
 await travelPath(fromEarthToEden.path.slice(1),  false)
-
 // start main cycle
 const allPathsFromEden = bfsAllPaths(ship.graph, "Eden") 
 
@@ -38,15 +38,34 @@ try
 
 
     console.log(slicedPath)
-    const result = await travelPath(slicedPath);
+    let result;
+    if (visited.has(slicedPath.at(-1)))
+    {
+        allPathsFromEden.shift();
+        continue;
+    }
+    else
+    {
+        result = await travelPath(slicedPath);
+    }
     if (/* typeof result === "string"*/ true)
     {
         console.log(result)
         // !!!! 
         // add returned path to the end of list. It`ll become forever loop if there`s infinite garbage
-        if (typeof result === "string")
+        if (result.stoppedPlanet)
         {
             allPathsFromEden.push(path)
+            result = result.stoppedPlanet
+        }
+        else
+        {
+            visited.add(result)
+            // const rmVisited = ship.graph.outEdges(result)
+            // for (let rm of rmVisited)
+            // {
+            //     visited.delete(rm)
+            // }
         }
         const pathsToEden = ship.makeGraph(result, "Eden")
         pathsToEden.sort((a, b) => {return a.path.length - b.path.length})
@@ -97,9 +116,9 @@ async function travelPath(path, useEdenReturnLogic = true)
 
     if (path && path.length > 0)
     {
-        console.log(path)
+        //console.log(path)
         sliceTravelResult = await ship.postTravel(path);
-        console.log(sliceTravelResult)
+        //console.log(sliceTravelResult)
     }
     if (sliceTravelResult && sliceTravelResult.planetDiffs)
     {
@@ -124,7 +143,7 @@ async function travelPath(path, useEdenReturnLogic = true)
         {
             if (tempResult == false) 
             {
-                return planet;
+                return {stoppedPlanet : planet};
             };
         }
     }
@@ -214,3 +233,4 @@ async function handlePlanet(nextPlanet, useEdenReturnLogic = true, travelResult 
 
 
 console.log(ship.logPaths)
+}
