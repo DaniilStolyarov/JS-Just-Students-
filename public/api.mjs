@@ -4,7 +4,7 @@ const {TOKEN, ORIGIN} = (await import("./config.json", {
   },
 })).default;
 const sleep = ms => new Promise(r => setTimeout(r, ms));
-
+const latency = 150
 export class Ship
 {
   constructor()
@@ -16,18 +16,21 @@ export class Ship
     this.height = 11;
     this.graph = null;
     this.planet = 'Earth'
+    this.garbage = {}
   }
   async fetchUniverse()
   {
-    // const universe = await this.getUniverse();
-    const universe = {
+    const universe = await this.getUniverse();
+    /*const universe = {
       name: "MyTeam",
       ship: {
       capacityX: 8,
       capacityY: 11,
       fuelUsed: 1000,
       garbage: {},
-      planet: {}
+      planet: {
+        name : "D"
+      }
       },
       universe: [
         ["A", "B", 120],
@@ -69,19 +72,21 @@ export class Ship
   ["U", "Eden", 120],
   ["V", "U", 120]
       ]
-      }
-    this.width = universe.ship.capacityX;
-    this.height = universe.ship.capacityY;
-    
+      } */
+    this.width = universe.ship.capacityY;
+    this.height = universe.ship.capacityX;
+    this.planet = universe.ship.planet.name
+    this.garbage = universe.ship.garbage
+    console.log("currentPlanet", this.planet)
     this.loadGraph(universe.universe)
-    await sleep(250);
+    await sleep(latency);
   }
   async getUniverse()
   {
       const PATH = "/player/universe";
       let response = await fetch(ORIGIN + PATH, {headers : this.headers})
       let json = await response.json();
-    await sleep(250);
+    await sleep(latency);
     return json;
   }
 
@@ -95,7 +100,7 @@ export class Ship
       const PATH = "/player/travel";
       let response = await fetch(ORIGIN + PATH, {headers : this.headers, method : "POST", body: body})
       let json = await response.json();
-    await sleep(250);
+    await sleep(latency);
     return json;
   }
 
@@ -104,7 +109,7 @@ export class Ship
     const PATH = "/player/reset";
     let response = await fetch(ORIGIN + PATH, {headers : this.headers, method: "DELETE"})
     let json = await response.json();
-    await sleep(250);
+    await sleep(latency);
     return json;
   }
 
@@ -113,7 +118,7 @@ export class Ship
     const PATH = "/player/rounds";
     let response = await fetch(ORIGIN + PATH, {headers : this.headers})
     let json = await response.json();
-    await sleep(250);
+    await sleep(latency);
     return json;
   }
 
@@ -123,11 +128,11 @@ export class Ship
           garbage: garbage
       }
       const body = JSON.stringify(request)
-      // console.log(body)
+      console.log(body)
       const PATH = "/player/collect";
       let response = await fetch(ORIGIN + PATH, {headers : this.headers, method : "POST", body: body})
       let json = await response.json();
-    await sleep(250);
+    await sleep(latency);
     return json;
   }
    fitGarbageIntoShip(garbage, currentShipLayout) {
@@ -225,6 +230,27 @@ export class Ship
 
     return bestPlacement;
 }
+   fitGarbageAnyRotate(garbage, currentShipLayout)
+   {
+    
+    let result = this.fitGarbageIntoShip(garbage, currentShipLayout)
+    if (result == null)
+    {
+      for (let i = 0; i < 3; i++)
+      {
+        
+        for (let key in garbage)
+        {
+          garbage[key] = rotateFigure(garbage[key])
+        }
+        
+        result = this.fitGarbageIntoShip(garbage, currentShipLayout)
+        if (result != null) return result;
+      }
+    }
+    return result;
+   }
+
 
   loadGraph(edges)
     {
@@ -282,4 +308,28 @@ export class Ship
         return paths
     }
   
+}
+
+function rotateFigure(coords) {
+  // Находим максимальные координаты по x и y
+  let maxX = 0;
+  let maxY = 0;
+  for (const [x, y] of coords) {
+      maxX = Math.max(maxX, x);
+      maxY = Math.max(maxY, y);
+  }
+
+  // Создаем новый массив для повернутых координат
+  const rotatedCoords = [];
+
+  // Проходимся по всем клеткам в новой матрице и копируем значения из исходной, поворачивая их
+  for (let x = 0; x <= maxX; x++) {
+      for (let y = 0; y <= maxY; y++) {
+          if (coords.some(coord => coord[0] === x && coord[1] === y)) {
+              rotatedCoords.push([maxY - y, x]); // Поворот на 90 градусов
+          }
+      }
+  }
+
+  return rotatedCoords;
 }

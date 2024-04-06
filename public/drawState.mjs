@@ -1,7 +1,7 @@
 export function drawState(mat)
 {
-    const width = 8;
-    const height = 11;
+    const width = mat[0].length;
+    const height = mat.length;
     const step = 40;
 
     const canvas = document.querySelector("#canvas");

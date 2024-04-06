@@ -9,21 +9,21 @@ ship.logPaths = []
 await ship.fetchUniverse();
 
 // const neighbours = ship.graph.outEdges(ship.planet)
-const paths = ship.makeGraph("Earth", "Eden")
+const paths = ship.makeGraph(ship.planet, "Eden")
 paths.sort((a, b) =>
     {
         return a.path.length - b.path.length
     })
 const fromEarthToEden = paths[0]
-await travelPath(fromEarthToEden.path,  false)
+console.log(fromEarthToEden.path.join(" -> "))
+await travelPath(fromEarthToEden.path.slice(1),  false)
 
 // start main cycle
-const allPathsFromEden = bfsAllPaths(ship.graph, "Eden")
-
-for (let maxLoopCounter = 0; maxLoopCounter < 10;  maxLoopCounter += 1)
+const allPathsFromEden = bfsAllPaths(ship.graph, "Eden")    
+while(true)
 {
     let path = allPathsFromEden[0];
-    console.log(allPathsFromEden.join(",\n"))
+    if (!path) break;
     if (path.at(-1) === "Earth") 
     {
         allPathsFromEden.shift();
@@ -31,17 +31,26 @@ for (let maxLoopCounter = 0; maxLoopCounter < 10;  maxLoopCounter += 1)
     };
     const slicedPath = path.slice(1);
 
+
     console.log(slicedPath)
     const result = await travelPath(slicedPath);
-    if (typeof result === "string")
+    if (/* typeof result === "string"*/ true)
     {
+        console.log(result)
         // !!!! 
         // add returned path to the end of list. It`ll become forever loop if there`s infinite garbage
-        allPathsFromEden.push(path)
+        if (typeof result === "string")
+        {
+            allPathsFromEden.push(path)
+        }
         const pathsToEden = ship.makeGraph(result, "Eden")
         pathsToEden.sort((a, b) => {return a.path.length - b.path.length})
         const chosenPathToEden = pathsToEden[0]
+        
+        console.log("PATH TO EDEN!", chosenPathToEden)
+        
         await travelPath(chosenPathToEden.path.slice(1), false)
+        
     }
     allPathsFromEden.shift()
 }
@@ -58,13 +67,13 @@ function bfsAllPaths(graph, startNode) {
 
         for (let edge of outEdges)
         {
-            if (path.includes(edge.w)) return
+            if (path.includes(edge.w)) continue
             const newPath = []
             Object.assign(newPath, path)
             newPath.push(edge.w)
             newPaths.push(newPath)
         }
-        paths =     paths.concat(newPaths)
+        paths = paths.concat(newPaths)
         for (let newPath of newPaths)
         {
             helpRec(newPath)
@@ -74,10 +83,13 @@ function bfsAllPaths(graph, startNode) {
 }
 async function travelPath(path, useEdenReturnLogic = true)
 {
+    console.log(path)
     ship.logPaths.push(path);
     for (let planet of path)
     {   
-        console.log("PLANET", planet)
+        await ship.fetchUniverse();
+        console.log("from PLANET", ship.planet)
+        console.log("to PLANET", planet)
 
         const tempResult = await handlePlanet(planet, useEdenReturnLogic)
         
@@ -89,831 +101,37 @@ async function travelPath(path, useEdenReturnLogic = true)
             };
         }
     }
+    return path.at(-1)
 }
 
 async function handlePlanet(nextPlanet, useEdenReturnLogic = true)
 {
+    if (nextPlanet == ship.planet) return;
 
-    if (nextPlanet == "Earth") return;
+
+    const travelResult = await ship.postTravel([nextPlanet])
+    console.log(travelResult)
+
     
-    try
-    {
-        const resu = await ship.postTravel([nextPlanet])
-    }
-    catch(err)
-    {
-        console.log(err)
-    }
-    const travelResult = 
-    {
-        "planetGarbage": {
-            "2FvakD": [
-                [
-                    0,
-                    0
-                ],
-                [
-                    0,
-                    1
-                ],
-                [
-                    1,
-                    1
-                ],
-                [
-                    2,
-                    1
-                ],
-                [
-                    3,
-                    1
-                ],
-                [
-                    2,
-                    2
-                ]
-            ],
-            "2FvbCi": [
-                [
-                    0,
-                    1
-                ],
-                [
-                    0,
-                    0
-                ],
-                [
-                    1,
-                    1
-                ],
-                [
-                    2,
-                    1
-                ],
-                [
-                    2,
-                    0
-                ],
-                [
-                    3,
-                    0
-                ]
-            ],
-            "2FvvP1": [
-                [
-                    0,
-                    2
-                ],
-                [
-                    0,
-                    1
-                ],
-                [
-                    0,
-                    0
-                ],
-                [
-                    1,
-                    2
-                ],
-                [
-                    2,
-                    2
-                ],
-                [
-                    2,
-                    1
-                ]
-            ],
-            "2FwFZJ": [
-                [
-                    0,
-                    1
-                ],
-                [
-                    1,
-                    1
-                ],
-                [
-                    1,
-                    0
-                ],
-                [
-                    2,
-                    1
-                ],
-                [
-                    3,
-                    1
-                ]
-            ],
-            "2FwG63": [
-                [
-                    0,
-                    0
-                ],
-                [
-                    1,
-                    0
-                ],
-                [
-                    2,
-                    0
-                ],
-                [
-                    1,
-                    1
-                ],
-                [
-                    2,
-                    1
-                ]
-            ],
-            "2FwbGL": [
-                [
-                    0,
-                    0
-                ],
-                [
-                    0,
-                    1
-                ],
-                [
-                    1,
-                    1
-                ],
-                [
-                    0,
-                    2
-                ],
-                [
-                    1,
-                    2
-                ],
-                [
-                    1,
-                    3
-                ]
-            ],
-            "2Fwbiq": [
-                [
-                    0,
-                    0
-                ],
-                [
-                    1,
-                    0
-                ],
-                [
-                    2,
-                    0
-                ],
-                [
-                    3,
-                    0
-                ],
-                [
-                    0,
-                    1
-                ],
-                [
-                    3,
-                    1
-                ],
-                [
-                    0,
-                    2
-                ],
-                [
-                    1,
-                    2
-                ],
-                [
-                    1,
-                    3
-                ]
-            ],
-            "2Fwvu8": [
-                [
-                    0,
-                    0
-                ],
-                [
-                    0,
-                    1
-                ],
-                [
-                    1,
-                    1
-                ],
-                [
-                    1,
-                    2
-                ],
-                [
-                    2,
-                    2
-                ],
-                [
-                    2,
-                    3
-                ],
-                [
-                    3,
-                    3
-                ]
-            ],
-            "2FxG5R": [
-                [
-                    0,
-                    1
-                ],
-                [
-                    1,
-                    1
-                ],
-                [
-                    1,
-                    0
-                ],
-                [
-                    2,
-                    1
-                ],
-                [
-                    3,
-                    1
-                ]
-            ],
-            "2FxGXv": [
-                [
-                    0,
-                    0
-                ],
-                [
-                    0,
-                    1
-                ],
-                [
-                    1,
-                    1
-                ],
-                [
-                    2,
-                    1
-                ],
-                [
-                    1,
-                    2
-                ],
-                [
-                    1,
-                    3
-                ],
-                [
-                    2,
-                    3
-                ],
-                [
-                    3,
-                    3
-                ]
-            ],
-            "2FxbiD": [
-                [
-                    0,
-                    0
-                ],
-                [
-                    1,
-                    0
-                ],
-                [
-                    2,
-                    0
-                ],
-                [
-                    0,
-                    1
-                ],
-                [
-                    0,
-                    2
-                ],
-                [
-                    1,
-                    2
-                ],
-                [
-                    2,
-                    2
-                ],
-                [
-                    3,
-                    2
-                ],
-                [
-                    2,
-                    3
-                ]
-            ],
-            "2FxcAi": [
-                [
-                    0,
-                    0
-                ],
-                [
-                    0,
-                    1
-                ],
-                [
-                    1,
-                    1
-                ]
-            ],
-            "HXLk": [
-                [
-                    0,
-                    0
-                ],
-                [
-                    1,
-                    0
-                ],
-                [
-                    2,
-                    0
-                ],
-                [
-                    3,
-                    0
-                ],
-                [
-                    0,
-                    1
-                ],
-                [
-                    0,
-                    2
-                ],
-                [
-                    1,
-                    2
-                ],
-                [
-                    2,
-                    2
-                ],
-                [
-                    0,
-                    3
-                ],
-                [
-                    2,
-                    3
-                ]
-            ],
-            "HXoF": [
-                [
-                    0,
-                    2
-                ],
-                [
-                    1,
-                    2
-                ],
-                [
-                    1,
-                    1
-                ],
-                [
-                    1,
-                    0
-                ],
-                [
-                    2,
-                    2
-                ],
-                [
-                    3,
-                    2
-                ]
-            ],
-            "HryY": [
-                [
-                    0,
-                    2
-                ],
-                [
-                    0,
-                    1
-                ],
-                [
-                    1,
-                    1
-                ],
-                [
-                    1,
-                    0
-                ],
-                [
-                    2,
-                    1
-                ]
-            ],
-            "HsS3": [
-                [
-                    0,
-                    2
-                ],
-                [
-                    0,
-                    1
-                ],
-                [
-                    0,
-                    0
-                ],
-                [
-                    1,
-                    2
-                ],
-                [
-                    1,
-                    1
-                ]
-            ],
-            "JCcL": [
-                [
-                    0,
-                    0
-                ],
-                [
-                    1,
-                    0
-                ]
-            ],
-            "JXnd": [
-                [
-                    0,
-                    2
-                ],
-                [
-                    0,
-                    1
-                ],
-                [
-                    0,
-                    0
-                ],
-                [
-                    1,
-                    2
-                ],
-                [
-                    1,
-                    0
-                ],
-                [
-                    2,
-                    2
-                ],
-                [
-                    3,
-                    2
-                ]
-            ],
-            "JYF8": [
-                [
-                    0,
-                    3
-                ],
-                [
-                    0,
-                    2
-                ],
-                [
-                    0,
-                    1
-                ],
-                [
-                    1,
-                    3
-                ],
-                [
-                    1,
-                    1
-                ],
-                [
-                    2,
-                    3
-                ],
-                [
-                    2,
-                    1
-                ],
-                [
-                    3,
-                    3
-                ],
-                [
-                    3,
-                    2
-                ],
-                [
-                    3,
-                    1
-                ],
-                [
-                    3,
-                    0
-                ]
-            ],
-            "JsRR": [
-                [
-                    0,
-                    0
-                ],
-                [
-                    1,
-                    0
-                ],
-                [
-                    2,
-                    0
-                ],
-                [
-                    3,
-                    0
-                ],
-                [
-                    0,
-                    1
-                ],
-                [
-                    2,
-                    1
-                ],
-                [
-                    2,
-                    2
-                ],
-                [
-                    3,
-                    2
-                ]
-            ],
-            "Jssv": [
-                [
-                    0,
-                    2
-                ],
-                [
-                    0,
-                    1
-                ],
-                [
-                    0,
-                    0
-                ],
-                [
-                    1,
-                    1
-                ],
-                [
-                    2,
-                    1
-                ],
-                [
-                    3,
-                    1
-                ],
-                [
-                    3,
-                    0
-                ]
-            ],
-            "KD8T": [
-                [
-                    0,
-                    0
-                ],
-                [
-                    1,
-                    0
-                ],
-                [
-                    2,
-                    0
-                ],
-                [
-                    3,
-                    0
-                ],
-                [
-                    0,
-                    1
-                ],
-                [
-                    1,
-                    1
-                ]
-            ],
-            "KYJk": [
-                [
-                    0,
-                    0
-                ],
-                [
-                    1,
-                    0
-                ],
-                [
-                    2,
-                    0
-                ],
-                [
-                    3,
-                    0
-                ],
-                [
-                    0,
-                    1
-                ],
-                [
-                    3,
-                    1
-                ]
-            ],
-            "KYmF": [
-                [
-                    0,
-                    0
-                ],
-                [
-                    0,
-                    1
-                ],
-                [
-                    1,
-                    1
-                ],
-                [
-                    2,
-                    1
-                ],
-                [
-                    0,
-                    2
-                ],
-                [
-                    2,
-                    2
-                ],
-                [
-                    3,
-                    2
-                ],
-                [
-                    2,
-                    3
-                ]
-            ],
-            "KswY": [
-                [
-                    0,
-                    2
-                ],
-                [
-                    0,
-                    1
-                ],
-                [
-                    1,
-                    1
-                ],
-                [
-                    1,
-                    0
-                ],
-                [
-                    2,
-                    1
-                ],
-                [
-                    3,
-                    1
-                ]
-            ],
-            "LD7q": [
-                [
-                    0,
-                    0
-                ],
-                [
-                    0,
-                    1
-                ],
-                [
-                    1,
-                    1
-                ],
-                [
-                    1,
-                    2
-                ]
-            ],
-            "LDaL": [
-                [
-                    0,
-                    0
-                ],
-                [
-                    0,
-                    1
-                ],
-                [
-                    1,
-                    1
-                ],
-                [
-                    2,
-                    1
-                ],
-                [
-                    0,
-                    2
-                ],
-                [
-                    2,
-                    2
-                ],
-                [
-                    0,
-                    3
-                ],
-                [
-                    2,
-                    3
-                ],
-                [
-                    3,
-                    3
-                ]
-            ]
-        },
-        "shipGarbage":  {
-            "71B2XMi": [
-            [
-            2,
-            10
-            ],
-            [
-            2,
-            9
-            ],
-            [
-            2,
-            8
-            ],
-            [
-            3,
-            8
-            ]
-            ]
-            } ,
-        "fuelDiff": 34,
-        "planetDiffs": [
-            {
-                "from": "Earth",
-                "to": "H",
-                "fuel": 44
-            }
-        ]
-    }
-
-
-    if (nextPlanet == "Eden") return;
     const garbage = travelResult.planetGarbage;
-
-    if (!ship.prevShipLayout )
+    console.log(garbage)
+    if (/*!ship.prevShipLayout*/true )
     {
-        ship.prevShipLayout = genEmpty(ship.height, ship.width, 0 ); // null, если корабль пустой или неизвестно его текущее состояние
+        
+    }
+    ship.prevShipLayout = genEmpty(ship.height, ship.width, 0 ); // null, если корабль пустой или неизвестно его текущее состояние
         if (travelResult.shipGarbage )
         {
             for (let key in travelResult.shipGarbage)
             {
                 for (let block of travelResult.shipGarbage[key])
                 {
-                    ship.prevShipLayout[block[1]][block[0]] = 1
+                    ship.prevShipLayout[block[0]][block[1]] = 1
                 }
             }
         }
-    }
-
-    drawState(ship.prevShipLayout)
-
-
+    drawState(nextShipLayout)
+    
     for (const key in garbage)
     {
         const g = {}
@@ -921,13 +139,12 @@ async function handlePlanet(nextPlanet, useEdenReturnLogic = true)
         
         try 
         {
-            const nextShipLayout = ship.fitGarbageIntoShip(g, ship.prevShipLayout);
+            const nextShipLayout = ship.fitGarbageAnyRotate(g, ship.prevShipLayout);
 
             const placed = razn(ship.prevShipLayout, nextShipLayout)
-            const garbage = {}
-            garbage[key] = placed;
-            const collectResult = await ship.postCollect(garbage)
-            drawState(nextShipLayout)
+            ship.garbage[key] = placed
+            console.log(ship.garbage)
+            
             ship.prevShipLayout = nextShipLayout
 
         }
@@ -937,6 +154,20 @@ async function handlePlanet(nextPlanet, useEdenReturnLogic = true)
             continue
         }
     }  
+
+    if ([...Object.keys(ship.garbage)].length > 0 && [...Object.keys(garbage)].length > 0)
+    {
+        const collectResult = await ship.postCollect(ship.garbage);
+        console.log("collectResult", collectResult)
+        if (useEdenReturnLogic)
+        {
+            if (collectResult && collectResult.error && collectResult.error.startsWith("you have to take at least"))
+            {
+                console.log("EDEN RETURNING")
+                return false;
+            }
+        }
+    }
     const result = ship.fitGarbageIntoShip({test: [[0,0], [1,0], [2,0], [3,0]]}, ship.prevShipLayout)
 
     if (useEdenReturnLogic)
@@ -949,5 +180,6 @@ async function handlePlanet(nextPlanet, useEdenReturnLogic = true)
     }
     print(ship.prevShipLayout) 
 }
+
 
 console.log(ship.logPaths)
