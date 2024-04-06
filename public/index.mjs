@@ -8,7 +8,9 @@ let ship = new Ship();
 ship.logPaths = []
 await ship.fetchUniverse();
 
-// const neighbours = ship.graph.outEdges(ship.planet)
+// console.log(await ship.deleteReset())
+// await sleep(100000000)
+
 const paths = ship.makeGraph(ship.planet, "Eden")
 paths.sort((a, b) =>
     {
@@ -19,8 +21,11 @@ console.log(fromEarthToEden.path.join(" -> "))
 await travelPath(fromEarthToEden.path.slice(1),  false)
 
 // start main cycle
-const allPathsFromEden = bfsAllPaths(ship.graph, "Eden")    
-while(true)
+const allPathsFromEden = bfsAllPaths(ship.graph, "Eden") 
+
+try
+{
+    while(true)
 {
     let path = allPathsFromEden[0];
     if (!path) break;
@@ -54,7 +59,11 @@ while(true)
     }
     allPathsFromEden.shift()
 }
-
+}
+catch (err)
+{
+    console.error(err)
+}
 function bfsAllPaths(graph, startNode) {
     
     let paths = []
@@ -83,16 +92,34 @@ function bfsAllPaths(graph, startNode) {
 }
 async function travelPath(path, useEdenReturnLogic = true)
 {
-    console.log(path)
     ship.logPaths.push(path);
+    let sliceTravelResult, sliceTravelPlanet, sliceTravelPlanetIndex;
+
+    if (path && path.length > 0)
+    {
+        console.log(path)
+        sliceTravelResult = await ship.postTravel(path);
+        console.log(sliceTravelResult)
+    }
+    if (sliceTravelResult && sliceTravelResult.planetDiffs)
+    {
+        sliceTravelPlanet = sliceTravelResult.planetDiffs.at(-1).to;
+
+        sliceTravelPlanetIndex = path.indexOf(sliceTravelPlanet)
+    }
+    if (sliceTravelPlanetIndex != -1)
+    {
+        path = path.slice(sliceTravelPlanetIndex)
+    }
+    
     for (let planet of path)
     {   
         await ship.fetchUniverse();
         console.log("from PLANET", ship.planet)
         console.log("to PLANET", planet)
 
-        const tempResult = await handlePlanet(planet, useEdenReturnLogic)
-        
+        const tempResult = await handlePlanet(planet, useEdenReturnLogic, sliceTravelPlanetIndex ? sliceTravelResult : null)
+        sliceTravelResult = null;
         if (useEdenReturnLogic)
         {
             if (tempResult == false) 
@@ -104,12 +131,15 @@ async function travelPath(path, useEdenReturnLogic = true)
     return path.at(-1)
 }
 
-async function handlePlanet(nextPlanet, useEdenReturnLogic = true)
+async function handlePlanet(nextPlanet, useEdenReturnLogic = true, travelResult = null)
 {
-    if (nextPlanet == ship.planet) return;
+    if (nextPlanet == ship.planet && !travelResult) return;
 
 
-    const travelResult = await ship.postTravel([nextPlanet])
+    if (!travelResult)
+    {
+        travelResult = await ship.postTravel([nextPlanet])
+    }
     console.log(travelResult)
 
     
@@ -130,7 +160,7 @@ async function handlePlanet(nextPlanet, useEdenReturnLogic = true)
                 }
             }
         }
-            drawState(ship.prevShipLayout)
+        drawState(ship.prevShipLayout)
     
     for (const key in garbage)
     {
@@ -146,6 +176,7 @@ async function handlePlanet(nextPlanet, useEdenReturnLogic = true)
             console.log(ship.garbage)
             
             ship.prevShipLayout = nextShipLayout
+            drawState(ship.prevShipLayout)
 
         }
         catch(err)
@@ -168,7 +199,7 @@ async function handlePlanet(nextPlanet, useEdenReturnLogic = true)
             }
         }
     }
-    const result = ship.fitGarbageIntoShip({test: [[0,0], [1,0], [2,0], [3,0]]}, ship.prevShipLayout)
+    const result = ship.fitGarbageAnyRotate({test: [[0,0], [1,0]]}, ship.prevShipLayout)
 
     if (useEdenReturnLogic)
     {
