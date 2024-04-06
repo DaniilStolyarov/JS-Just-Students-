@@ -4,7 +4,7 @@ const {TOKEN, ORIGIN} = (await import("./config.json", {
   },
 })).default;
 const sleep = ms => new Promise(r => setTimeout(r, ms));
-const latency = 50
+const latency = 40;
 export class Ship
 {
   constructor()

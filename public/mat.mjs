@@ -45,3 +45,13 @@ export function razn(mat1, mat2)
         }
     return answer
 }
+
+export function fullPercentage(garbage, capacity)
+{
+    let sum = 0
+    for (let key of [...Object.keys(garbage)])
+    {
+        sum += garbage[key].length;
+    }
+    return sum / capacity;
+}

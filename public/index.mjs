@@ -228,9 +228,11 @@ async function handlePlanet(nextPlanet, useEdenReturnLogic = true, travelResult 
             return false;
         }
     }
+
     print(ship.prevShipLayout) 
 }
 
-
+console.clear()
 console.log(ship.logPaths)
+
 }
